@@ -768,7 +768,10 @@ def get_edge_padding_mask(padded_graph: gn_graph.GraphsTuple) -> ArrayTree:
 
 
 def get_graph_padding_mask(padded_graph: gn_graph.GraphsTuple) -> ArrayTree:
-  """Returns a mask for the graphs of a padded graph.
+  """Returns a mask for graphs in a padded batch or a single unpadded graph.
+
+  A single unpadded graph has no padding graph, so its mask is always True.
+  For multiple graphs, the input must have been padded with pad_with_graphs.
 
   Args:
     padded_graph: ``GraphsTuple`` padded using ``pad_with_graphs``.
@@ -777,6 +780,10 @@ def get_graph_padding_mask(padded_graph: gn_graph.GraphsTuple) -> ArrayTree:
     Boolean array of shape [total_num_graphs] containing True for real graphs,
     and False for padding graphs.
   """
+  # pad_with_graphs always appends at least one graph, so a single graph
+  # cannot contain a padding graph.
+  if padded_graph.n_node.shape[0] == 1:
+    return jnp.ones((1,), dtype=bool)
   n_padding_graph = get_number_of_padding_with_graphs_graphs(padded_graph)
   total_num_graphs = padded_graph.n_node.shape[0]
   return _get_mask(padding_length=n_padding_graph, full_length=total_num_graphs)

@@ -435,6 +435,18 @@ class GraphTest(parameterized.TestCase):
       mask = jax.jit(utils.get_graph_padding_mask)(graphs_tuple)
       np.testing.assert_array_equal(mask, expected_mask)
 
+  def test_get_graph_padding_mask_for_single_unpadded_graph(self):
+    """A single real graph must not be mistaken for a padding graph."""
+    graphs, _ = _get_list_and_batched_graph()
+    single_graph = graphs[0]
+    expected = jnp.array([True])
+    with self.subTest('nojit'):
+      np.testing.assert_array_equal(
+          utils.get_graph_padding_mask(single_graph), expected)
+    with self.subTest('jit'):
+      np.testing.assert_array_equal(
+          jax.jit(utils.get_graph_padding_mask)(single_graph), expected)
+
   def test_segment_sum(self):
     result = utils.segment_sum(
         jnp.arange(9), jnp.array([0, 1, 2, 0, 4, 0, 1, 1, 0]), 6)
